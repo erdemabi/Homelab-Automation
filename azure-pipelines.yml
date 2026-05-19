@@ -2,26 +2,36 @@ trigger:
 - main
 
 pool:
-  name: 'Home-Lab-Pool'  # Kurduğun havuzun adı tam olarak neyse aynısını yazmalısın
+  name: 'Home-Lab-Pool'
 
 stages:
-- stage: Homelab_Check
-  displayName: 'Ev Laboratuvarı Kontrolü'
+- stage: Homelab_Diagnostic
+  displayName: 'Ev Laboratuvarı Teşhis Süreci'
   jobs:
-  - job: System_Info
-    displayName: 'Sistem Durumu'
+  - job: Collect_Logs
+    displayName: 'Sistem Raporu Toplama'
     steps:
     
+    # 1. Adım: Evdeki makinede bir rapor klasörü oluşturup bilgileri dosyalara yazıyoruz
     - script: |
-        echo "=== Bağlantı Başarılı ==="
-        echo "Pipeline şu an evdeki Ubuntu makinesinde çalışıyor."
-        echo "Çalışan Kullanıcı: $(whoami)"
-        echo "Makine Adı: $(hostname)"
-      displayName: 'İlk Selamlaşma'
+        mkdir -p $(Build.ArtifactStagingDirectory)/reports
+        
+        echo "=== UBUNTU SISTEM BILGISI ===" > $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        uname -a >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        cat /etc/os-release >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        
+        echo -e "\n=== RAM VE DISK DURUMU ===" >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        free -h >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        df -h / >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        
+        echo -e "\n=== KURULU PAKETLER VE SERVISLER ===" >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+        systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
+      displayName: 'Rapor Dosyasını Oluştur'
 
-    - script: |
-        echo "=== Sistem Kaynakları ==="
-        free -h
-        echo "=== Disk Durumu ==="
-        df -h /
-      displayName: 'Kaynak Tüketimi Kontrolü'
+    # 2. Adım: Oluşan bu dosyayı Azure DevOps Artifacts alanına yüklüyoruz
+    - task: PublishBuildArtifacts@1
+      displayName: 'Raporu Artifact Olarak Yayınla'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/reports'
+        ArtifactName: 'Ubuntu_Sistem_Teşhis_Raporu'
+        publishLocation: 'Container'
