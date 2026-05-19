@@ -1,0 +1,27 @@
+trigger:
+- main
+
+pool:
+  name: 'Home-Lab-Pool'  # Kurduğun havuzun adı tam olarak neyse aynısını yazmalısın
+
+stages:
+- stage: Homelab_Check
+  displayName: 'Ev Laboratuvarı Kontrolü'
+  jobs:
+  - job: System_Info
+    displayName: 'Sistem Durumu'
+    steps:
+    
+    - script: |
+        echo "=== Bağlantı Başarılı ==="
+        echo "Pipeline şu an evdeki Ubuntu makinesinde çalışıyor."
+        echo "Çalışan Kullanıcı: $(whoami)"
+        echo "Makine Adı: $(hostname)"
+      displayName: 'İlk Selamlaşma'
+
+    - script: |
+        echo "=== Sistem Kaynakları ==="
+        free -h
+        echo "=== Disk Durumu ==="
+        df -h /
+      displayName: 'Kaynak Tüketimi Kontrolü'
