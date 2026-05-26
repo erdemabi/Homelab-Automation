@@ -19,7 +19,7 @@ stages:
         SonarQube: 'SonarQubeConnection'
         scannerMode: 'cli'
         configMode: 'manual'
-        cliProjectKey: 'homelab-automation'
+        cliProjectKey: 'Homelab-Automation'
         cliProjectName: 'Homelab-Automation'
         cliSources: '.'
 
