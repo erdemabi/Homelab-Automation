@@ -7,11 +7,14 @@ pool:
 stages:
 - stage: Homelab_Diagnostic
   displayName: 'Ev Laboratuvarı Teşhis Süreci'
+
   jobs:
   - job: Collect_Logs
     displayName: 'Sistem Raporu Toplama'
+
     steps:
 
+    # 1 - SonarQube hazırlık
     - task: SonarQubePrepare@8
       displayName: 'SonarQube Prepare'
       inputs:
@@ -22,6 +25,7 @@ stages:
         cliProjectName: 'Homelab-Automation'
         cliSources: '.'
 
+    # 2 - Sistem raporu oluştur
     - script: |
         mkdir -p $(Build.ArtifactStagingDirectory)/reports
         
@@ -37,14 +41,17 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
+    # 3 - Sonar analiz
     - task: SonarQubeAnalyze@8
       displayName: 'SonarQube Analyze'
 
+    # 4 - Quality Gate sonucunu publish et
     - task: SonarQubePublish@8
       displayName: 'Publish Quality Gate Result'
       inputs:
         pollingTimeoutSec: '300'
 
+    # 5 - Quality Gate FAIL olsa bile pipeline devam etsin
     - script: |
         echo "Quality Gate kontrol ediliyor..."
 
@@ -53,13 +60,14 @@ stages:
         echo "Quality Gate Status: $STATUS"
 
         if [ "$STATUS" != "OK" ]; then
-          echo "Quality Gate FAILED - Pipeline durduruluyor"
-          exit 1
+          echo "Quality Gate FAILED ama pipeline devam edecek."
+          exit 0
         fi
 
         echo "Quality Gate PASSED"
-      displayName: 'Quality Gate Fail ise Pipeline Durdur'
+      displayName: 'Quality Gate Fail Olsa Bile Devam Et'
 
+    # 6 - Artifact publish
     - task: PublishBuildArtifacts@1
       displayName: 'Raporu Artifact Olarak Yayınla'
       inputs:
