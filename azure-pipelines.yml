@@ -12,7 +12,7 @@ stages:
     displayName: 'Sistem Raporu Toplama'
     steps:
 
-    - task: SonarQubePrepare@7
+    - task: SonarQubePrepare@8
       displayName: 'SonarQube Prepare - Quality Gate Fail Pipeline Durdurur'
       inputs:
         SonarQube: 'SonarQubeConnection'
@@ -40,10 +40,10 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
-    - task: SonarQubeAnalyze@7
+    - task: SonarQubeAnalyze@8
       displayName: 'SonarQube Analyze'
 
-    - task: SonarQubePublish@7
+    - task: SonarQubePublish@8
       displayName: 'Publish Quality Gate Result'
       inputs:
         pollingTimeoutSec: '300'
