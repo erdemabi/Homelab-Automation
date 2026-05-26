@@ -12,9 +12,8 @@ stages:
     displayName: 'Sistem Raporu Toplama'
     steps:
 
-    # 1. Adım: SonarQube analiz hazırlığı
     - task: SonarQubePrepare@7
-      displayName: 'SonarQube Prepare'
+      displayName: 'SonarQube Prepare - Quality Gate Fail Pipeline Durdurur'
       inputs:
         SonarQube: 'SonarQubeConnection'
         scannerMode: 'cli'
@@ -22,8 +21,10 @@ stages:
         cliProjectKey: 'Homelab-Automation'
         cliProjectName: 'Homelab-Automation'
         cliSources: '.'
+        extraProperties: |
+          sonar.qualitygate.wait=true
+          sonar.qualitygate.timeout=300
 
-    # 2. Adım: Evdeki makinede bir rapor klasörü oluşturup bilgileri dosyalara yazıyoruz
     - script: |
         mkdir -p $(Build.ArtifactStagingDirectory)/reports
         
@@ -39,17 +40,14 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
-    # 3. Adım: SonarQube analizi çalıştır
     - task: SonarQubeAnalyze@7
       displayName: 'SonarQube Analyze'
 
-    # 4. Adım: Quality Gate sonucunu Azure DevOps'a bildir
     - task: SonarQubePublish@7
       displayName: 'Publish Quality Gate Result'
       inputs:
         pollingTimeoutSec: '300'
 
-    # 5. Adım: Oluşan bu dosyayı Azure DevOps Artifacts alanına yüklüyoruz
     - task: PublishBuildArtifacts@1
       displayName: 'Raporu Artifact Olarak Yayınla'
       inputs:
