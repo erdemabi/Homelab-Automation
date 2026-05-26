@@ -11,8 +11,19 @@ stages:
   - job: Collect_Logs
     displayName: 'Sistem Raporu Toplama'
     steps:
-    
-    # 1. Adım: Evdeki makinede bir rapor klasörü oluşturup bilgileri dosyalara yazıyoruz
+
+    # 1. Adım: SonarQube analiz hazırlığı
+    - task: SonarQubePrepare@7
+      displayName: 'SonarQube Prepare'
+      inputs:
+        SonarQube: 'SonarQubeConnection'
+        scannerMode: 'cli'
+        configMode: 'manual'
+        cliProjectKey: 'homelab-automation'
+        cliProjectName: 'Homelab-Automation'
+        cliSources: '.'
+
+    # 2. Adım: Evdeki makinede bir rapor klasörü oluşturup bilgileri dosyalara yazıyoruz
     - script: |
         mkdir -p $(Build.ArtifactStagingDirectory)/reports
         
@@ -28,7 +39,17 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
-    # 2. Adım: Oluşan bu dosyayı Azure DevOps Artifacts alanına yüklüyoruz
+    # 3. Adım: SonarQube analizi çalıştır
+    - task: SonarQubeAnalyze@7
+      displayName: 'SonarQube Analyze'
+
+    # 4. Adım: Quality Gate sonucunu Azure DevOps'a bildir
+    - task: SonarQubePublish@7
+      displayName: 'Publish Quality Gate Result'
+      inputs:
+        pollingTimeoutSec: '300'
+
+    # 5. Adım: Oluşan bu dosyayı Azure DevOps Artifacts alanına yüklüyoruz
     - task: PublishBuildArtifacts@1
       displayName: 'Raporu Artifact Olarak Yayınla'
       inputs:
