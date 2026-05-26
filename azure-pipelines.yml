@@ -13,7 +13,7 @@ stages:
     steps:
 
     - task: SonarQubePrepare@8
-      displayName: 'SonarQube Prepare - Quality Gate Fail Pipeline Durdurur'
+      displayName: 'SonarQube Prepare'
       inputs:
         SonarQube: 'SonarQubeConnection'
         scannerMode: 'cli'
@@ -21,9 +21,6 @@ stages:
         cliProjectKey: 'Homelab-Automation'
         cliProjectName: 'Homelab-Automation'
         cliSources: '.'
-        extraProperties: |
-          sonar.qualitygate.wait=true
-          sonar.qualitygate.timeout=300
 
     - script: |
         mkdir -p $(Build.ArtifactStagingDirectory)/reports
@@ -47,6 +44,21 @@ stages:
       displayName: 'Publish Quality Gate Result'
       inputs:
         pollingTimeoutSec: '300'
+
+    - script: |
+        echo "Quality Gate kontrol ediliyor..."
+
+        STATUS=$(curl -s -u "$(SONAR_TOKEN):" "http://localhost:9000/api/qualitygates/project_status?projectKey=Homelab-Automation" | grep -o '"status":"[^"]*"' | head -1 | cut -d':' -f2 | tr -d '"')
+
+        echo "Quality Gate Status: $STATUS"
+
+        if [ "$STATUS" != "OK" ]; then
+          echo "Quality Gate FAILED - Pipeline durduruluyor"
+          exit 1
+        fi
+
+        echo "Quality Gate PASSED"
+      displayName: 'Quality Gate Fail ise Pipeline Durdur'
 
     - task: PublishBuildArtifacts@1
       displayName: 'Raporu Artifact Olarak Yayınla'
