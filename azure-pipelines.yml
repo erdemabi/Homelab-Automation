@@ -41,6 +41,18 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
+    # Debug - Agent üzerinde hangi dosyalar var?
+    - script: |
+        echo "Current directory:"
+        pwd
+
+        echo "Build.SourcesDirectory:"
+        echo "$(Build.SourcesDirectory)"
+
+        echo "Files:"
+        ls -R "$(Build.SourcesDirectory)"
+      displayName: 'Debug Source Files'
+
     # 3 - Sonar analiz
     - task: SonarQubeAnalyze@8
       displayName: 'SonarQube Analyze'
