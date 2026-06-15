@@ -23,7 +23,7 @@ stages:
         configMode: 'manual'
         cliProjectKey: 'Homelab-Automation'
         cliProjectName: 'Homelab-Automation'
-        cliSources: '.'
+        cliSources: '$(Build.SourcesDirectory)'
 
     # 2 - Sistem raporu oluştur
     - script: |
