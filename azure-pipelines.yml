@@ -14,7 +14,6 @@ stages:
 
     steps:
 
-    # 1 - SonarQube hazırlık
     - task: SonarQubePrepare@8
       displayName: 'SonarQube Prepare'
       inputs:
@@ -23,9 +22,8 @@ stages:
         configMode: 'manual'
         cliProjectKey: 'Homelab-Automation'
         cliProjectName: 'Homelab-Automation'
-        cliSources: '$(Build.SourcesDirectory)'
+        cliSources: 'src'
 
-    # 2 - Sistem raporu oluştur
     - script: |
         mkdir -p $(Build.ArtifactStagingDirectory)/reports
         
@@ -41,7 +39,6 @@ stages:
         systemctl list-units --type=service --state=running | head -n 30 >> $(Build.ArtifactStagingDirectory)/reports/system_info.txt
       displayName: 'Rapor Dosyasını Oluştur'
 
-    # Debug - Agent üzerinde hangi dosyalar var?
     - script: |
         echo "Current directory:"
         pwd
@@ -53,17 +50,14 @@ stages:
         ls -R "$(Build.SourcesDirectory)"
       displayName: 'Debug Source Files'
 
-    # 3 - Sonar analiz
     - task: SonarQubeAnalyze@8
       displayName: 'SonarQube Analyze'
 
-    # 4 - Quality Gate sonucunu publish et
     - task: SonarQubePublish@8
       displayName: 'Publish Quality Gate Result'
       inputs:
         pollingTimeoutSec: '300'
 
-    # 5 - Quality Gate FAIL olsa bile pipeline devam etsin
     - script: |
         echo "Quality Gate kontrol ediliyor..."
 
@@ -79,7 +73,6 @@ stages:
         echo "Quality Gate PASSED"
       displayName: 'Quality Gate Fail Olsa Bile Devam Et'
 
-    # 6 - Artifact publish
     - task: PublishBuildArtifacts@1
       displayName: 'Raporu Artifact Olarak Yayınla'
       inputs:
