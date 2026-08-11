@@ -7,6 +7,9 @@ jobs:
   hello:
     runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -15,6 +18,10 @@ jobs:
         run: |
           echo "Hello from first job" > result.txt
           ls -la
+
+      - name: Set version
+        id: set-version
+        run: echo "version=v1.2.3" >> "$GITHUB_OUTPUT"
 
       - name: Upload result
         uses: actions/upload-artifact@v7
@@ -38,3 +45,11 @@ jobs:
           ls -la
           echo "File content:"
           cat result.txt
+
+  third-job:
+    needs: hello
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show version
+        run: echo "Version = ${{ needs.hello.outputs.version }}"
