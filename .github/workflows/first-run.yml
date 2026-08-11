@@ -11,23 +11,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Show basic info
+      - name: Create file
         run: |
-          echo "Hello from GitHub Actions"
-          echo "Branch: $GITHUB_REF"
-          echo "Commit: $GITHUB_SHA"
-          echo "Runner OS: $RUNNER_OS"
-
-      - name: Finish
-        run: echo "First job completed"
+          echo "Hello from first job" > result.txt
+          ls -la
 
   second-job:
     needs: hello
     runs-on: ubuntu-latest
 
     steps:
-      - name: Start second job
-        run: echo "Hello job finished, second job started"
-
-      - name: Finish second job
-        run: echo "Second job completed"
+      - name: Check files
+        run: |
+          echo "Files in second job:"
+          ls -la
