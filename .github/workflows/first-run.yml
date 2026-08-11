@@ -53,3 +53,18 @@ jobs:
     steps:
       - name: Show version
         run: echo "Version = ${{ needs.hello.outputs.version }}"
+
+  secret-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Use secret
+        env:
+          MY_SECRET: ${{ secrets.LAB_SECRET }}
+        run: |
+          echo "Secret geldi mi?"
+          if [ -n "$MY_SECRET" ]; then
+            echo "YES"
+          else
+            echo "NO"
+          fi
