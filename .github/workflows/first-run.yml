@@ -19,4 +19,15 @@ jobs:
           echo "Runner OS: $RUNNER_OS"
 
       - name: Finish
-        run: echo "Workflow completed"
+        run: echo "First job completed"
+
+  second-job:
+    needs: hello
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Start second job
+        run: echo "Hello job finished, second job started"
+
+      - name: Finish second job
+        run: echo "Second job completed"
