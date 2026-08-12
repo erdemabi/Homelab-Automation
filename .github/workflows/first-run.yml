@@ -1,70 +1,55 @@
-name: First Workflow Run
+name: Production Like Pipeline
 
 on:
   workflow_dispatch:
 
-jobs:
-  hello:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
+  packages: write
 
-    outputs:
-      version: ${{ steps.set-version.outputs.version }}
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Create file
+      - name: Test application
         run: |
-          echo "Hello from first job" > result.txt
-          ls -la
+          test -f app.sh
+          grep "Homelab application started" app.sh
+          echo "Tests passed"
 
-      - name: Set version
-        id: set-version
-        run: echo "version=v1.2.3" >> "$GITHUB_OUTPUT"
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
 
-      - name: Upload result
-        uses: actions/upload-artifact@v7
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          name: result-file
-          path: result.txt
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  second-job:
-    needs: hello
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download result
-        uses: actions/download-artifact@v8
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
         with:
-          name: result-file
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/homelab-app:${{ github.sha }}
 
-      - name: Check files
-        run: |
-          echo "Files in second job:"
-          ls -la
-          echo "File content:"
-          cat result.txt
-
-  third-job:
-    needs: hello
+  deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show version
-        run: echo "Version = ${{ needs.hello.outputs.version }}"
-
-  secret-job:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Use secret
-        env:
-          MY_SECRET: ${{ secrets.LAB_SECRET }}
+      - name: Simulate deployment
         run: |
-          echo "Secret geldi mi?"
-          if [ -n "$MY_SECRET" ]; then
-            echo "YES"
-          else
-            echo "NO"
-          fi
+          echo "Deploying image:"
+          echo "ghcr.io/${{ github.repository_owner }}/homelab-app:${{ github.sha }}"
+          echo "Deployment completed"
